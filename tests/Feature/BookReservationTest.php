@@ -6,8 +6,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 use App\Models\Book;
+use App\Models\Author;
 
-class BookReservationTest extends TestCase
+class BookManagementTest extends TestCase
 {
     use RefreshDatabase;
     /**
@@ -19,10 +20,7 @@ class BookReservationTest extends TestCase
     {
         $this->withoutExceptionHandling();
         
-        $response = $this->post('books', [
-            'title' => 'First Book Title',
-            'author' => 'Sekoni Seun'
-        ]);
+        $response = $this->post('books', $this->data());
 
         // Assert that the response was ok
         $response->assertOk();
@@ -34,10 +32,7 @@ class BookReservationTest extends TestCase
     {
         // $this->withoutExceptionHandling();
         
-        $response = $this->post('books', [
-            'title' => '',
-            'author' => 'Sekoni Seun'
-        ]);
+        $response = $this->post('books', array_merge($this->data(), ['title' => '']));
 
         $response->assertSessionHasErrors('title');
     }
@@ -46,12 +41,9 @@ class BookReservationTest extends TestCase
     {
         // $this->withoutExceptionHandling();
         
-        $response = $this->post('books', [
-            'title' => 'New Title',
-            'author' => ''
-        ]);
+        $response = $this->post('books', array_merge($this->data(), ['author_id' => '']));
 
-        $response->assertSessionHasErrors('author');
+        $response->assertSessionHasErrors('author_id');
     }
 
     /** @test */
@@ -60,19 +52,59 @@ class BookReservationTest extends TestCase
         $this->withoutExceptionHandling();
 
         
-        $this->post('books', [
-            'title' => 'Actual Title',
-            'author' => 'Sekoni Seun'
-        ]);
+        $this->post('books', $this->data());
 
         $book = Book::first();
    
         $this->patch('update/books/'.$book->id, [
             'title' => 'New Title',
-            'author' => 'Sekoni Seun'
+            'author_id' => 1
         ]);
             
         $this->assertEquals('New Title', Book::first()->title);
-        $this->assertEquals('Sekoni Seun', $book->author);
+        $this->assertEquals(1, Book::first()->author_id);
+    }
+
+    /** @test */
+    public function test_if_a_book_can_be_deleted()
+    {
+        // $this->withoutExceptionHandling();
+
+        $this->post('books', $this->data());
+
+        $book = Book::first();
+        $this->assertCount(1, Book::all());
+
+        $response = $this->delete('delete/book/'.$book->id);
+
+        $this->assertCount(0, Book::all());
+        // assert redirect
+        $response->assertRedirect('/books');
+
+    }
+
+    public function test_if_a_new_author_can_be_created_automatically()
+    {
+        $this->withoutExceptionHandling();
+        $this->post('books', [
+            'title' => 'Delete Title Book',
+            'author_id' => 1
+        ]);
+
+        $author = Author::first();
+        $book = Book::first();
+
+        // dd($book);
+
+        $this->assertEquals($author->id, (int)$book->author_id);
+        // $this->assertCount(1, Author::all());
+    }
+
+    private function data()
+    {
+        return [
+            'title' => 'First Book Title',
+            'author_id' => 1
+        ];
     }
 }

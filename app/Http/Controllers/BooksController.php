@@ -9,30 +9,30 @@ use Validator;
 
 class BooksController extends Controller
 {
-    public function store(Request $request)
+    public function store()
     {
-        // $input = $request->all();
-        // $rules = [
-        //     'title' => 'required',
-        //     'author' => 'required'
-        // ];
-        // $validator = Validator::make($input, $rules);
         $data = $this->validateRequest();
-       
         Book::create($data);
     }
 
-    public function update(Book $book, Request $request)
+    public function update(Book $book)
     {
         $data = $this->validateRequest();
         $book->update($data);
     }
 
+    public function destroy(Book $book)
+    {
+        $book->delete();
+
+        return redirect('/books');
+    }
+
     protected function validateRequest()
     {
-        return $request->validate([
+        return request()->validate([
             'title' => 'required', 
-            'author' => 'required'
+            'author_id' => 'required'
         ]);
     }
 }
