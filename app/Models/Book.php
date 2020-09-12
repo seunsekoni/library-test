@@ -29,10 +29,6 @@ class Book extends Model
 
     public function checkin($user)
     {
-        try {
-        } catch (\Throwable $th) {
-            throw $th;
-        }
         $reservation = $this->reservations()->where('user_id', $user->id)
             ->whereNotNull('checked_out_at')
             ->whereNull('checked_in_at')
